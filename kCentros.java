@@ -1,5 +1,6 @@
 import java.util.*;
 import java.io.*;
+import java.io.IOException;
 
 class Aresta{
     private int custo = 1;
@@ -29,53 +30,89 @@ class buildFork{
 
     public int vertices;
     public int Arestas;
+
   
-    //limitr o numero de vertices
+    //limitar o numero de vertices
     int limiteVertices;
     int raio;
+    int infinito = -1;
   
     // definir dados
     Random random = new Random();
-    public List<List<Aresta>> listaAdjacentes;
+    public List<List<Aresta>> grafo;
     
     //construtor
-    public buildFork(int qtdVertices, int raio)
+    public buildFork(int qtdVertices, int qtdArestas)
     {
-        this.raio = raio;
-        
         this.vertices = qtdVertices;
         
-        // Construindo lista de arestas para cada vertice do grafo
-        listaAdjacentes = new ArrayList<>(vertices);
+        // Instanciando o grafo
+        grafo = new ArrayList<>(vertices);
         for (int i = 0; i < vertices; i++){
-            listaAdjacentes.add(new ArrayList<Aresta>());
+            grafo.add(new ArrayList<Aresta>());
         }
 
-        //construido o grafo
-
+        //Construindo o grafo
         for(int i = 0; i < this.vertices; i++){
 
             for(int j = 0; j < this.vertices; j++){
 
-                if( i != j){
-                    // add an edge between them
-                    addArestas(i, j);
+                if(i != j){
+                    //Adicionar aresta nos vertices
+                    addArestas(infinito, i, j, true);
                 }
             }
 
         }
     }
-  
-  
+
     // criar arestas entre o par de vertices
-    void addArestas(int v, int w)
+    public void addArestas(int custo, int v, int w, boolean iniciais)
     {
-        Aresta aresta = new Aresta(1, v, w);
-        listaAdjacentes.get(v).add(aresta);
+        if(iniciais){
+            Aresta aresta = new Aresta(custo, v, w);
+            grafo.get(v).add(aresta);
+        }else{
+            Aresta aresta = new Aresta(custo, v, w);
+            grafo.get(v).add(aresta);
+            grafo.get(w).add(aresta);
+        }
+    }
+
+    public int getVerticeSize(){
+        return grafo.size();
+    }
+
+    public Aresta getAresta(int v, int d){
+
+        Aresta aresta = null;
+
+        for(int i = 0; i < grafo.get(v).size(); i++){
+
+            aresta = grafo.get(v).get(i);
+
+            if(aresta.getDestino() == d)
+                return aresta;
+        }
+
+        return aresta;
+    }
+
+    
+    public Aresta getArestaForIndex(int v, int index){
+
+        Aresta aresta = grafo.get(v).get(index);
+        
+        return aresta;
+    }
+
+    public int getArestaSize(int v){
+        return grafo.get(v).size();
     }
 
 }
 
+/*
 public class FloydWarshall
 {
     private int distancematrix[][];
@@ -161,25 +198,71 @@ public class FloydWarshall
         scan.close();
     }
 }
-
+*/
 public class kCentros{
-  
-    public static void main(String[] args){
-        int vertices =3;
-        int raio = 6;
-        buildFork grafo = new buildFork(vertices, raio);
+    
 
-        for(int i = 0; i < grafo.listaAdjacentes.size(); i++){
+    public static void mostrarGrafo(buildFork grafos){
+
+        for(int i = 0; i < grafos.getVerticeSize(); i++){
             System.out.println("vertice[" + i +"]: ");
-            for(int j = 0; j < grafo.listaAdjacentes.get(i).size(); j++){
+            for(int j = 0; j < grafos.getArestaSize(i); j++){
                 System.out.println("");
-                System.out.println( "\tOrigem: " + grafo.listaAdjacentes.get(i).get(j).getOrigem() + "\n\tDestino: " + grafo.listaAdjacentes.get(i).get(j).getDestino() + "\n\tCusto: " + grafo.listaAdjacentes.get(i).get(j).getCusto() + ", ");
+                System.out.println( "\tOrigem: " + i + "\n\tDestino: " + grafos.getArestaForIndex(i, j).getDestino() + "\n\tCusto: " + grafos.getArestaForIndex(i, j).getCusto() + ", ");
 
             }
 
             System.out.println("----------------------");
         }
-        
+    }
+
+    public static buildFork lerArquivoTxt(String path) throws IOException{
+
+        BufferedReader buffRead = new BufferedReader(new FileReader(path));
+        String linha = "";
+
+        //Construir grafo inicial com distancias infinitas
+        buildFork grafo;
+        linha = buffRead.readLine();
+        String[] cabecalho = linha.split(" ");
+        grafo = new buildFork(Integer.parseInt(cabecalho[1]), Integer.parseInt(cabecalho[2]));
+
+
+        boolean finish = false;
+
+        while (!finish) {
+
+            linha = buffRead.readLine();
+
+            if(linha == null){
+                finish = true;
+            }
+            else{
+
+                String[] aresta = linha.split(" ");
+                if( Integer.parseInt(aresta[1]) -1 == 98){
+                    System.out.println("98");
+                }
+                grafo.addArestas(Integer.parseInt(aresta[3]), Integer.parseInt(aresta[1]) - 1, Integer.parseInt(aresta[2]) - 1, false);
+            }
+        }
+
+        //fechar arquivo após leitura
+        buffRead.close();
+
+
+        return grafo;
+
+    }
     
+    
+    public static void main(String[] args)throws IOException{
+   
+        String path = "./pmed3.txt";
+
+        buildFork grafo = lerArquivoTxt(path);
+
+        mostrarGrafo(grafo);
+        
     }
 }
