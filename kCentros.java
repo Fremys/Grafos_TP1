@@ -24,6 +24,19 @@ class Aresta{
     public int getDestino(){
         return this.destino;
     }
+
+    public void setCusto(int custo){
+        this.custo = custo;
+    }
+
+    public void setOrigem(int origem){
+        this.origem = origem;
+    }
+
+    public void setDestino(int destino){
+        this.destino = destino;
+    }
+
 }
 
 class buildFork{
@@ -35,7 +48,7 @@ class buildFork{
     //limitar o numero de vertices
     int limiteVertices;
     int raio;
-    int infinito = -1;
+    int infinito = 999999999;
   
     // definir dados
     Random random = new Random();
@@ -73,9 +86,19 @@ class buildFork{
             Aresta aresta = new Aresta(custo, v, w);
             grafo.get(v).add(aresta);
         }else{
-            Aresta aresta = new Aresta(custo, v, w);
-            grafo.get(v).add(aresta);
-            grafo.get(w).add(aresta);
+
+            Aresta newAresta = new Aresta(custo, v, w);
+            Aresta newArestaI = new Aresta(custo, w, v);
+
+            Aresta oldAresta = new Aresta(999999999, v, w);
+            Aresta oldArestaI = new Aresta(999999999, w, v);
+
+            int indexAresta = getIndexAresta(oldAresta);
+            int indexArestaI = getIndexAresta(oldArestaI);
+
+            grafo.get(v).set(indexAresta, newAresta);
+            grafo.get(w).set(indexArestaI, newArestaI);
+
         }
     }
 
@@ -98,7 +121,22 @@ class buildFork{
         return aresta;
     }
 
-    
+    public int getIndexAresta(Aresta aresta){
+
+        int index = -1;
+
+        for(int i = 0; i < grafo.get(aresta.getOrigem()).size(); i++){
+
+            if(grafo.get(aresta.getOrigem()).get(i).getDestino() == aresta.getDestino()){
+                
+                index = i;
+                return index;
+            }
+        }
+
+        return index;
+    }
+
     public Aresta getArestaForIndex(int v, int index){
 
         Aresta aresta = grafo.get(v).get(index);
@@ -112,34 +150,34 @@ class buildFork{
 
 }
 
-/*
-public class FloydWarshall
+
+class FloydWarshall
 {
     private int distancematrix[][];
     private int numberofvertices;
-    public static final int INFINITY = 999;
+    public static final int INFINITY = 999999999;
  
     public FloydWarshall(int numberofvertices)
     {
-        distancematrix = new int[numberofvertices + 1][numberofvertices + 1];
+        distancematrix = new int[numberofvertices][numberofvertices];
         this.numberofvertices = numberofvertices;
     }
  
     public void floydwarshall(int adjacencymatrix[][])
     {
-        for (int source = 1; source <= numberofvertices; source++)
+        for (int source = 0; source < numberofvertices; source++)
         {
-            for (int destination = 1; destination <= numberofvertices; destination++)
+            for (int destination = 0; destination < numberofvertices; destination++)
             {
                 distancematrix[source][destination] = adjacencymatrix[source][destination];
             }
         }
  
-        for (int intermediate = 1; intermediate <= numberofvertices; intermediate++)
+        for (int intermediate = 0; intermediate < numberofvertices; intermediate++)
         {
-            for (int source = 1; source <= numberofvertices; source++)
+            for (int source = 0; source < numberofvertices; source++)
             {
-                for (int destination = 1; destination <= numberofvertices; destination++)
+                for (int destination = 0; destination < numberofvertices; destination++)
                 {
                     if (distancematrix[source][intermediate] + distancematrix[intermediate][destination]
                          < distancematrix[source][destination])
@@ -149,56 +187,22 @@ public class FloydWarshall
             }
         }
  
-        for (int source = 1; source <= numberofvertices; source++)
+        for (int source = 0; source < numberofvertices; source++)
             System.out.print("\t" + source);
  
         System.out.println();
-        for (int source = 1; source <= numberofvertices; source++)
+        for (int source = 0; source < numberofvertices; source++)
         {
             System.out.print(source + "\t");
-            for (int destination = 1; destination <= numberofvertices; destination++)
+            for (int destination =0; destination < numberofvertices; destination++)
             {
                 System.out.print(distancematrix[source][destination] + "\t");
             }
             System.out.println();
         }
     }
- 
-    public static void main(String... arg)
-    {
-        int adjacency_matrix[][];
-        int numberofvertices;
- 
-        Scanner scan = new Scanner(System.in);
-        System.out.println("Enter the number of vertices");
-        numberofvertices = scan.nextInt();
- 
-        adjacency_matrix = new int[numberofvertices + 1][numberofvertices + 1];
-        System.out.println("Enter the Weighted Matrix for the graph");
-        for (int source = 1; source <= numberofvertices; source++)
-        {
-            for (int destination = 1; destination <= numberofvertices; destination++)
-            {
-                adjacency_matrix[source][destination] = scan.nextInt();
-                if (source == destination)
-                {
-                    adjacency_matrix[source][destination] = 0;
-                    continue;
-                }
-                if (adjacency_matrix[source][destination] == 0)
-                {
-                    adjacency_matrix[source][destination] = INFINITY;
-                }
-            }
-        }
- 
-        System.out.println("The Transitive Closure of the Graph");
-        FloydWarshall floydwarshall = new FloydWarshall(numberofvertices);
-        floydwarshall.floydwarshall(adjacency_matrix);
-        scan.close();
-    }
 }
-*/
+
 public class kCentros{
     
 
@@ -240,9 +244,6 @@ public class kCentros{
             else{
 
                 String[] aresta = linha.split(" ");
-                if( Integer.parseInt(aresta[1]) -1 == 98){
-                    System.out.println("98");
-                }
                 grafo.addArestas(Integer.parseInt(aresta[3]), Integer.parseInt(aresta[1]) - 1, Integer.parseInt(aresta[2]) - 1, false);
             }
         }
@@ -250,19 +251,51 @@ public class kCentros{
         //fechar arquivo após leitura
         buffRead.close();
 
-
         return grafo;
+    }
 
+    public static int[][] createAdjacencyMatrix(buildFork grafo) {
+
+        int[][] AdjacencyMatrix = new int[grafo.getVerticeSize()][grafo.getVerticeSize()];
+
+        for(int i = 0; i < grafo.getVerticeSize(); i++){
+            for(int j = 0; j < grafo.getVerticeSize(); j++){
+
+                if(i != j){
+
+                    Aresta aresta = grafo.getAresta(i, j);
+                    AdjacencyMatrix[i][j] = aresta.getCusto();
+
+                }else{
+                
+                    AdjacencyMatrix[i][j] = 0;
+                }
+            }
+        }
+
+        return AdjacencyMatrix;
     }
     
     
     public static void main(String[] args)throws IOException{
+
+        
    
-        String path = "./pmed3.txt";
+        String path = "./teste.txt";
 
         buildFork grafo = lerArquivoTxt(path);
 
-        mostrarGrafo(grafo);
+        //mostrarGrafo(grafo);
+
+        int adjacency_matrix[][] = createAdjacencyMatrix(grafo);
+
+        
+        
+        int numberofvertices = grafo.getVerticeSize();
+        int INFINITY = 999999999;
+ 
+        FloydWarshall floydwarshall = new FloydWarshall(numberofvertices);
+        floydwarshall.floydwarshall(adjacency_matrix);
         
     }
 }
