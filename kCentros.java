@@ -1,6 +1,109 @@
 import java.util.*;
 import java.io.*;
 import java.io.IOException;
+/**
+ * Class name: Combinacao.java
+ *
+ * Classe que especifica o esquema de combinacao
+ * usando a contagem binaria.
+ *
+ * Autor: Daemonio (Marcos Paulo Ferreira)
+ * Contato: undefinido gmail com
+ * Homepage: https://daemoniolabs.wordpress.com
+ *
+ * Mon Jul  4 14:44:14 BRT 2011
+ *
+ */
+ 
+class Combinacao {
+    private int r ;
+    private String[] entrada ;
+    private int MAX ;
+    private int N ;
+ 
+    /** se r e' zero entao iremos fazer todas
+     * as combinacoes (com qualquer quantidade
+     * de elementos).
+     */
+    public Combinacao(String[] entrada, int r) {
+        this.r = r ;
+        this.entrada = entrada ;
+        this.MAX = ~(1 << entrada.length) ;
+        this.N = 1;
+    }
+ 
+    /** Retorna true quando ha pelo menos
+     * uma combinacao disponivel.
+     */
+    public boolean hasNext() {
+        if ( r != 0 ) {
+            while ( ((this.N & this.MAX) != 0) && (countbits() != r) ) N+=1 ;
+        }
+ 
+        return (this.N & this.MAX) != 0;
+    }
+ 
+    /** Retorna a quantidade de bits ativos (= 1)
+     * de N.
+     */
+    private int countbits() {
+        int i;
+        int c;
+ 
+        i = 1;
+        c = 0;
+        while ( (this.MAX & i) != 0 ) {
+            if ( (this.N & i) != 0) {
+                c++;
+            }
+            i = i << 1 ;
+        }
+ 
+        return c ;
+    }
+ 
+    /** Util para obter o tamanho da saida. Esse
+     * tamanho e' o numero de posicoes do vetor
+     * retornado por next.
+     */
+    public int getSaidaLength() {
+        if (r != 0) {
+            return r;
+        }
+ 
+        return this.countbits();
+    }
+ 
+    /** Retorna uma combinacao.
+     *
+     * ATENCAO: Sempre use next() quando se
+     * tem certeza que ha uma combinacao
+     * disponivel. Ou seja, sempre use next()
+     * quando hasNext() retornar true.
+     */
+    public String[] next() {
+        int saida_index, entrada_index, i;
+ 
+        String[] saida = new String[this.getSaidaLength()];
+ 
+        entrada_index = 0;
+        saida_index = 0;
+        i = 1;
+ 
+        while ((this.MAX & i) != 0) {
+            if ((this.N & i) != 0) {
+                saida[saida_index] = entrada[entrada_index];
+                saida_index += 1;
+            }
+            entrada_index += 1;
+            i = i << 1;
+        }
+ 
+        N += 1;
+ 
+        return saida;
+    }
+}
 
 class Aresta{
     private int custo = 1;
@@ -36,7 +139,6 @@ class Aresta{
     public void setDestino(int destino){
         this.destino = destino;
     }
-
 }
 
 class buildFork{
@@ -147,9 +249,7 @@ class buildFork{
     public int getArestaSize(int v){
         return grafo.get(v).size();
     }
-
 }
-
 
 class FloydWarshall
 {
@@ -163,7 +263,7 @@ class FloydWarshall
         this.numberofvertices = numberofvertices;
     }
  
-    public void floydwarshall(int adjacencymatrix[][])
+    public int[][] floydwarshall(int adjacencymatrix[][])
     {
         for (int source = 0; source < numberofvertices; source++)
         {
@@ -186,10 +286,11 @@ class FloydWarshall
                 }
             }
         }
- 
+        
+        
         for (int source = 0; source < numberofvertices; source++)
-            System.out.print("\t" + source);
- 
+        System.out.print("\t" + source);
+        
         System.out.println();
         for (int source = 0; source < numberofvertices; source++)
         {
@@ -200,6 +301,8 @@ class FloydWarshall
             }
             System.out.println();
         }
+
+        return distancematrix;
     }
 }
 
@@ -254,6 +357,7 @@ public class kCentros{
         return grafo;
     }
 
+
     public static int[][] createAdjacencyMatrix(buildFork grafo) {
 
         int[][] AdjacencyMatrix = new int[grafo.getVerticeSize()][grafo.getVerticeSize()];
@@ -272,14 +376,30 @@ public class kCentros{
                 }
             }
         }
-
         return AdjacencyMatrix;
     }
-    
-    
-    public static void main(String[] args)throws IOException{
 
+    public static Integer findMin(List<Integer> list)
+    {
+  
+        // check list is empty or not
+        if (list == null || list.size() == 0) {
+            return Integer.MAX_VALUE;
+        }
+  
+        // create a new list to avoid modification 
+        // in the original list
+        List<Integer> sortedlist = new ArrayList<>(list);
+  
+        // sort list in natural order
+        Collections.sort(sortedlist);
+  
+        // first element in the sorted list
+        // would be minimum
+        return sortedlist.get(0);
+    }
         
+    public static void main(String[] args)throws IOException{
    
         String path = "./teste.txt";
 
@@ -289,13 +409,79 @@ public class kCentros{
 
         int adjacency_matrix[][] = createAdjacencyMatrix(grafo);
 
-        
-        
-        int numberofvertices = grafo.getVerticeSize();
+        int numerDeVertices = grafo.getVerticeSize();
         int INFINITY = 999999999;
+        
+        FloydWarshall floydwarshall = new FloydWarshall(numerDeVertices);
+        
+        int[][] distanceMatrix = floydwarshall.floydwarshall(adjacency_matrix);
+
+        String[] str = new String[grafo.getVerticeSize()];
+        String [] saida;
+
+        for(int i = 0; i  < grafo.getVerticeSize(); i ++)
+            str[i] = ""+i+"";
+
  
-        FloydWarshall floydwarshall = new FloydWarshall(numberofvertices);
-        floydwarshall.floydwarshall(adjacency_matrix);
+        /** 
+         * Combinações de 5 elementos agrupados
+         * de 3 em 3.
+        */
+
+        for(int nCentros = 2; nCentros <= 2; nCentros++){
+
+            Combinacao comb1 = new Combinacao(str, nCentros);
+            
+            while (comb1.hasNext()) {
+                
+                saida = comb1.next();
+                
+                HashMap<Integer, List<Integer>> clusters;
+
+                clusters = new HashMap<>();
+                for (int i = 0; i < nCentros; i++){
+                    clusters.put( Integer.parseInt(saida[i]) ,new ArrayList<Integer>());
+                }
+                
+                for(int y = 0; y < grafo.getVerticeSize(); y++){
+                    
+                    List<Integer> distancias = new ArrayList<Integer>();
+
+                    distancias.clear();
+                    //int[] caminho_minimo = new int[nCentros];
+
+                    for(int x = 0; x < nCentros; x++){
+                        
+                        int distancia = distanceMatrix[y][Integer.parseInt(saida[x])];
+                        //caminho_minimo[x] = distancia;
+                        distancias.add(distancia);
+                    }
+
+                    int menorDistancia = findMin(distancias);
+
+                    int clusterCorrespondenteIndex = distancias.indexOf(menorDistancia);
+
+                    int clusterCorrespondente = Integer.parseInt(saida[clusterCorrespondenteIndex]);
+                    
+                    clusters.get(clusterCorrespondente).add(y);
+                    
+                }
+
+                for(int i = 0; i < saida.length; i++){
+                    int valor = Integer.parseInt(saida[i]);
+                    System.out.print("Cluster "+ valor + ": ");
+                    for(int j = 0; j < clusters.get(valor).size(); j++){
+                        
+                        System.out.print(clusters.get(valor).get(j) + ", ");
+                    }
+                    System.out.println();
+                }
+                System.out.println("=============================");
+            }
+
+        }
+
+
         
     }
 }
